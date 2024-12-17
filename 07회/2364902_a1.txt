@@ -1,0 +1,210 @@
+#include <stdio.h>
+#include "gameio.h"
+#include "keytypes.h"
+#include <Windows.h>
+#include <stdlib.h>
+#include <time.h>
+
+#define MAP_LENGTH	20
+#define MAP_HEIGHT	10
+
+//Macro for cursor control
+#define CLEAR_SCREEN() system("cls");
+#define SET_CURSOR(x,y) printf("\033[%d;%dH",y,x)
+
+void printMap(char* map[], int height, int x, int y);
+int cntstrlen(char str[], char key);
+int isArrangedChar(char* map[], char chr[], int height, int length, int x, int y);
+
+//----------------------------------------------------------------------------
+/** @brief print Map function
+	@param [in] *map[](char): map data (2D array)
+	@param [in] height(int): map height
+
+	//? åפ    褹 롥           ?    ?    Ȥ  Ƽ     ä    褹 롥
+*/
+void printMap(char* map[], int height, int x, int y)
+{
+	for (int i = 0; i < height; i++) {
+		printf("%s\n", map[i]);
+	}
+
+	printf("X : %d\n", x);
+	printf("Y : %d", y);
+}
+
+//----------------------------------------------------------------------------
+/** @brief Count length of string data
+	@param [in] str[](char): string data
+	@param [in] key(char): Key character for end of string
+	@return int: length of string
+	//ʸ     Ĺ    Ĵ ٤롥 ̾  strlen  key Ȥ   '\0'     ꤷ  Ĺ    Ĵ ٤뤬     δؿ   Ǥ դ key Ǹ    Ǥ   褦 ˤ  롥
+*/
+int cntstrlen(char str[], char key)
+{
+	int strlen = 0;
+	for (; str[strlen] != key;) {
+		strlen++;
+	}
+	return strlen;
+}
+
+
+
+//----------------------------------------------------------------------------
+/** @brief Arrange character for 2D map
+	@param [in,out] *map[](char): map data (2D array; pointer array)
+	@param [in] chr[](char): character data
+	@param [in] height(int): map height
+	@param [in] length(int): length of character data
+	@param [in] x(int): desired coordinate x for character data
+	@param [in] y(int): desired coordinate y for character data
+	@return int: success=1, fail=0
+	//?       ֤  롥 ɤˤ    ֤  ʤ  褦 ˤ  롥
+	//    Ū ˤϡ ?   ?? Υ   ?  map Υ   ?  Ķ   ʤ  褦 ˥     ?    ʤɤ ɬ  
+	// ֤  ͤ Ȥä ?   ??     ֤Ǥ      ɤ     Ƚ ꤹ  ȻȤ  䤹  
+	// ⤷?   ?? ι⤵  2 ʾ ˤ     Ϥ    礭        Ȥ    ɲä   
+*/
+int isArrangedChar(char* map[], char chr[], int height, int length, int x, int y)
+{
+	int retVal = 0;	//success:1, fail=0
+	int chlen = 0;
+
+	chlen = strlen(chr);
+
+
+	for (int i = 0; i < chlen; i++) {
+		map[y][x + i] = chr[i];
+	}
+
+	retVal = 1;  //     
+
+	return retVal;
+}
+
+
+
+int sub(void)
+{
+	srand(time(NULL));
+	int random = 0;
+	//	initialSettingGameIO();
+	//	playSound("r6.wav");
+	char mapDt[MAP_HEIGHT][MAP_LENGTH + 1] = {
+		"+------------------+",
+		"|                  |",
+		"|        |         |",
+		"|        |         |",
+		"|--------+         |",
+		"|        |         |",
+		"|        |         |",
+		"|                  |",
+		"+------------------+",
+	};
+
+	char* map[MAP_HEIGHT] = { NULL }; //Pointer array for map data
+
+	//Connect the 2D map for pointer array
+	for (int i = 0; i < MAP_HEIGHT; i++) {
+		map[i] = &mapDt[i][0];
+	}
+	char pc[] = "PC";			//Player character
+	int pc_len = cntstrlen(pc, '\0');	//length of character
+	char space[] = "  ";		//Empty
+	char npc[] = "NP";			//Non player character
+	int npc_len = cntstrlen(npc, '\0');	//length of Non player character
+	int pos_x = 1, pos_y = 3;	//Initial position of PC
+	int pre_x = 1, pre_y = 1;
+
+	//1st step: write map
+	printf("Hello world!!\n");
+	printMap(map, MAP_HEIGHT, pos_x, pos_y);
+
+	//2nd step: character arrangement
+	CLEAR_SCREEN();
+	SET_CURSOR(1, 1);
+	isArrangedChar(map, pc, MAP_HEIGHT, MAP_LENGTH, pos_x, pos_y);
+	isArrangedChar(map, npc, MAP_HEIGHT, MAP_LENGTH, pre_x, pre_y);
+	printMap(map, MAP_HEIGHT, pos_x, pos_y);
+
+
+
+	//3rd step: character and npc movement 
+
+	char key = ' ';
+	for (int i = 1; (key = getKey()) != KEY_ESC; i++) {
+		int random = rand() % 4; // random move 0 : UP, 1 : DOWN, 2 : LEFT, 3 : RIGHT
+		printf("%d", random);
+
+		switch (key) {
+		case KEY_UP:
+			isArrangedChar(map, space, MAP_HEIGHT, MAP_LENGTH, pos_x, pos_y);
+			if (map[pos_y - 1][pos_x] == ' ' && map[pos_y - 1][pos_x + 1] == ' ') {
+				pos_y--;
+			}
+			break;
+		case KEY_DOWN:
+			isArrangedChar(map, space, MAP_HEIGHT, MAP_LENGTH, pos_x, pos_y);
+			if (map[pos_y + 1][pos_x] == ' ' && map[pos_y + 1][pos_x + 1] == ' ') {
+				pos_y++;
+			}
+			break;
+		case KEY_LEFT:
+			isArrangedChar(map, space, MAP_HEIGHT, MAP_LENGTH, pos_x, pos_y);
+			if (map[pos_y][pos_x - 1] == ' ' && map[pos_y][pos_x - 1] != npc[1]) {
+				pos_x--;
+			}
+			break;
+		case KEY_RIGHT:
+			isArrangedChar(map, space, MAP_HEIGHT, MAP_LENGTH, pos_x, pos_y);
+			if (map[pos_y][pos_x + pc_len] == ' ') {
+				pos_x++;
+			}
+			break;
+
+		default:break;
+		}
+		CLEAR_SCREEN();
+		SET_CURSOR(1, 1);
+		isArrangedChar(map, pc, MAP_HEIGHT, MAP_LENGTH, pos_x, pos_y);
+		if (i % 2 == 0) { //if player act twice, npc move one.
+			switch (random) {//NPC movement
+			case 0://UP
+				isArrangedChar(map, space, MAP_HEIGHT, MAP_LENGTH, pre_x, pre_y);
+				if (map[pre_y - 1][pre_x] == ' ' && map[pre_y - 1][pre_x + 1] == ' ') {
+					pre_y--;
+				}
+				break;
+			case 1://DOWN
+				isArrangedChar(map, space, MAP_HEIGHT, MAP_LENGTH, pre_x, pre_y);
+				if (map[pre_y + 1][pre_x] == ' ' && map[pre_y + 1][pre_x + 1] == ' ') {
+					pre_y++;
+				}
+				break;
+			case 2://LEFT
+				isArrangedChar(map, space, MAP_HEIGHT, MAP_LENGTH, pre_x, pre_y);
+				if (map[pre_y][pre_x - 1] == ' ') {
+					pre_x--;
+				}
+				break;
+			case 3://RIGHT
+				isArrangedChar(map, space, MAP_HEIGHT, MAP_LENGTH, pre_x, pre_y);
+				if (map[pre_y][pre_x + npc_len] == ' ') {
+					pre_x++;
+				}
+				break;
+			}
+
+			CLEAR_SCREEN();
+			SET_CURSOR(1, 1);
+			isArrangedChar(map, npc, MAP_HEIGHT, MAP_LENGTH, pre_x, pre_y);
+		}
+
+		printMap(map, MAP_HEIGHT, pos_x, pos_y);
+	}
+
+	//	stopSound();
+
+
+	return 0;
+}
